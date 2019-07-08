@@ -1,0 +1,39 @@
+#!/usr/bin/expect -f
+
+if {$argc != 4} {
+    send_user "Usage: $argv0 <ip> <user> <passwd> <scan_container_id>\n"
+#puts stderr "argv error!\n"
+    exit 1
+}
+
+set ip         [lindex $argv 0 ]
+set user       [lindex $argv 1 ]
+set passwd     [lindex $argv 2 ]
+set scan_container [lindex $argv 3]
+
+spawn docker exec -it $scan_container ssh-keygen
+
+expect "Enter file in which to save the key (/root/.ssh/id_rsa):"
+send "\r"
+sleep 1
+expect {
+    "Overwrite (y/n)?" {sleep 1; send "n\r"}
+    "Enter passphrase (empty for no passphrase):" {sleep 1; send "\r"; exp_continue}
+    "Enter same passphrase again:" {send "\r"}
+}
+#expect "enter same passphrase again:"
+#send "\r"
+
+spawn docker exec -it $scan_container bash -c "ssh-copy-id -i /root/.ssh/id_rsa.pub $user@$ip"
+expect {
+    "Are you sure you want to continue connecting (yes/no)?" {
+        send "yes\r"
+        expect "$user@$ip's password:" {    #for ubuntu
+            send "$passwd\r"
+        } "Password:" {     #for macos
+            send "$passwd\r"
+        }
+    }
+    "$user@$ip's password:" {send "$passwd\r"}
+}
+expect eof
