@@ -1,7 +1,11 @@
 #!/usr/bin/expect -f
 
 if {$argc != 4} {
-    send_user "Usage: $argv0 <ip> <user> <passwd> <scan_container_id>\n"
+    send_user "Usage: $argv0 <agent_address> <user> <passwd> <scan_container>\n"
+    send_user "<agent_address> is the address of agent system. Value can be hostname, ip address, agent docker container name/id\n"
+    send_user "<user> is the user name in agent system\n"
+    send_user "<passwd> is the password of the <user>\n"
+    send_user "<scan_container> is python web service docker container name/id\n"
 #puts stderr "argv error!\n"
     exit 1
 }
