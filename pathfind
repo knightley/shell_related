@@ -1,0 +1,126 @@
+#! /bin/sh
+# 在查找路径下寻找一个或多个原始文件或文件模式，
+# 查找路径乃由特定的环境变量所定义。
+# 
+# 标准输出所产生的结果，通常是查找路径下找到的每个文件之第一个实体的完整路径，
+# 或是"filename: not found"的标准错误输出。
+# 
+# 如果所有文件都找到，则退出码为0。
+# 否则，即为找不到的文件个数（非0）
+# (shell的退出码限制为125)
+# 
+# 语法：
+#        pathfind [--all] [--?] [--help] [--version] envvar pattern(s)
+# 
+# 使用-all选项时，在路径下的每个目录都会被查找，
+# 而非停在第一个找到者。
+
+IFS='
+    '   #newline, space, tab. For security
+
+OLDPATH="$PATH"
+
+PATH=/bin:/usr/bin      #For security
+export PATH
+
+error()
+{
+    echo "$@" 1>&2
+    usage_and_exit 1
+}
+
+usage()
+{
+    echo "Usage: $PROGRAM [-all] [--?] [--help] [--version] envvar pattern(s)"
+}
+
+usage_and_exit()
+{
+    usage
+    exit $1
+}
+
+version()
+{
+    echo "$PROGRAM version $VERSION"
+}
+
+warning()
+{
+    echo "$@" 1>&2
+    EXITCODE=`expr $EXITCODE + 1`
+}
+
+all=no
+envvar=
+EXITCODE=0
+PROGRAM=`basename $0`
+VERSION=1.0
+
+while test $# -gt 0
+do
+    case $1 in
+    --all | --al | --a | -all | -al | -a)
+        all=yes
+        ;;
+    --help | --hel | --he | --h | '--?' | -help | -hel | -he | -h | '-?' )
+        usage_and_exit 0
+        ;;
+    --version | --versio | --versi | --vers | --ver | --ve | --v | \
+    -version | -versio | -versi | -vers | -ver | -ve | -v)
+        version
+        exit 0
+        ;;
+    -*)
+        error "Unrecognized option: $1"
+        ;;
+    *)
+        break
+        ;;
+    esac
+    shift
+done
+
+envvar="$1"
+test $# -gt 0 && shift
+
+test "x$envvar" = "x$PATH" && envvar=OLDPATH
+
+dirpath=`eval echo '${'"$envvar"'}' 2> /dev/null | tr : ' ' `
+
+# 为错误情况进行健全检查
+if test -z "$envvar"
+then
+    error Environment variable missing or empty
+elif test "x$dirpath" = "x$envvar"
+then
+    error "Broken sh on this platform: cannot expand $envvar"
+elif test -z "$dirpath"
+then 
+    error Empty directory search path
+elif test $# -eq 0
+then
+    exit 0
+fi
+
+for pattern in "$@"
+do
+    result=
+    for dir in $dirpath
+    do
+        for file in $dir/$pattern
+        do
+            if test -f "$file"
+            then
+                result="$file"
+                echo $result
+                test "$all" = "no" && break 2
+            fi
+        done
+    done
+    test -z "$result" && warning "$pattern: not found"
+done
+
+test $EXITCODE -gt 125 && EXITCODE=125
+
+exit $EXITCODE
