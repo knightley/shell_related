@@ -14,6 +14,7 @@
 # 
 # 使用-all选项时，在路径下的每个目录都会被查找，
 # 而非停在第一个找到者。
+# From 《Shell脚本学习指南》P205
 
 IFS='
     '   #newline, space, tab. For security
