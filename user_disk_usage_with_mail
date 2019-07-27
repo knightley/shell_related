@@ -1,0 +1,25 @@
+#!/bin/sh
+system_name=$(uname -s)
+if [ "$system_name" = "Darwin" ]; then
+  echo not worked for $system_name
+  exit 1
+elif [ "$system_name" = "Linux" ]; then
+  cd /home
+fi
+
+du -s *         |   #generate disk usage
+  sort -nr      |   #sort by number, the highest is the first one
+    sed 10q     |   #find the ten most highest
+      while read amount name
+      do
+        mail -s "disk usage warning" $name <<- EOF
+          Greetings. You are one of the top 10 consumers
+          of disk space on the system. Your home directory
+          uses $amount disk blocks.
+
+          Please clean up unneeded files, as soon as possible.
+
+          Thanks,
+          Your Friendly neighborhood system administrator.
+          EOF
+      done
