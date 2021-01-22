@@ -1,0 +1,24 @@
+#!/bin/bash
+
+function preprocess () {
+  for project in "${PROJECTS[@]}"
+  do
+    echo ----------[ preprocess $project ]----------
+    cd $project
+    if [ -f xcal-preprocess.conf ]; then
+      # do what you want to do
+      echo $(pwd)
+      ls
+      cd ..
+    elif [ -f build/xcal-preprocess.conf ]; then
+      cd build
+      # do what you want to do
+      echo $(pwd)
+      ls
+      cd ../..
+    fi
+  done
+}
+
+PROJECTS=(aaa bbb ccc ddd)
+preprocess
